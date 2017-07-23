@@ -6,15 +6,22 @@ module aenettinker
   ! Use the atomic energy network (aenet) library for machine-learning !
   ! potentials with Tinker.                                            !
   !                                                                    !
-  ! To compile this module and link it with the Tinker lib, the module !
-  ! file 'aenet.mod' from the aenet distribution needs to be present.  !
+  ! To make use of this interface, the accompanying files 'extra.f'    !
+  ! and 'extra1.f' need to be copied to Tinker's 'source' directory.   !
   !                                                                    !
   ! To work, the following keywords are required in the Tinker input   !
   ! file:                                                              !
-  !       VDW-LIST         The vdW neighbor list is used to keep track !
-  !                        of atomic environments.                     !
-  !       VDW-CUTOFF <R>   To set the cutoff distance of the potential !
+  !                                                                    !
   !       EXTRATERM only   To exclusively use the aenet energy term    !
+  !                                                                    !
+  ! The number of threads used for OpenMP parallelization can be set   !
+  ! using the 'OPENMP-THREADS' keyword.                                !
+  !                                                                    !
+  ! NOTE: Currently, only the GNU Fortran compiler is compatible with  !
+  !       the OpenMP parallelized section.  Intel Fortran compiler 15  !
+  !       gives WRONG results!
+  !--------------------------------------------------------------------!
+  ! 2017-07-23 Nongnuch Artrith and Alexander Urban                    !
   !--------------------------------------------------------------------!
 
   use aenet,  only: aenet_init,                     &

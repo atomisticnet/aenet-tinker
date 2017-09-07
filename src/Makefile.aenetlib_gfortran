@@ -65,7 +65,7 @@ NUMLIB = -llapack -lblas
 #            $(MKLROOT)/lib/intel64/libmkl_sequential.a \
 #            -Wl,--end-group -lpthread -lm -ldl
 
-AENETDIR = $(HOME)/code/aenet
+AENETDIR = $(HOME)/code/aenet/aenet
 AENET_LIBS = $(AENETDIR)/src/libaenet.a $(NUMLIB)
 AENET_INC = $(AENETDIR)/src
 
@@ -1433,7 +1433,7 @@ libtinker.a: ${OBJS}
 
 action.o:
 active.o: atoms.o inform.o iounit.o keys.o sizes.o usage.o
-aenettinker.o: atoms.o atomid.o boxes.o deriv.o energi.o neigh.o sizes.o units.o
+aenettinker.o: atoms.o atomid.o bound.o boxes.o deriv.o energi.o neigh.o sizes.o units.o
 alchemy.o: analyz.o atoms.o energi.o files.o inform.o iounit.o katoms.o mutant.o potent.o sizes.o units.o usage.o
 align.o:
 analysis.o: analyz.o atoms.o bound.o energi.o group.o inter.o iounit.o limits.o potent.o sizes.o vdwpot.o

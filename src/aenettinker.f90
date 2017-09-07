@@ -24,6 +24,8 @@ module aenettinker
   ! 2017-07-23 Nongnuch Artrith and Alexander Urban                    !
   !--------------------------------------------------------------------!
 
+  use, intrinsic :: iso_c_binding, only: c_bool
+
   use aenet,  only: aenet_init,                     &
                     aenet_final,                    &
                     aenet_load_potential,           &
@@ -34,7 +36,7 @@ module aenettinker
                     aenet_nbl_init,                 &
                     aenet_nbl_final,                &
                     aenet_nbl_neighbors,            &
-                    AENET_OK, AENET_TRUE
+                    AENET_OK, AENET_TRUE, AENET_FALSE
 
   use atoms,  only: tinker_n => n,                  &
                     tinker_type => type,            &
@@ -42,6 +44,7 @@ module aenettinker
                     tinker_y => y,                  &
                     tinker_z => z
   use atomid, only: tinker_name => name
+  use bound,  only: tinker_use_bounds => use_bounds
   use boxes,  only: tinker_lvec => lvec
   use deriv,  only: tinker_dex => dex
   use energi, only: tinker_ex => ex
@@ -60,6 +63,8 @@ module aenettinker
   integer,                                       private :: ntypes
   character(len=3), dimension(tinker_maxtyp),    private :: atom_types
   integer,          dimension(tinker_maxtyp),    private :: t2a_type_ID
+
+  logical(kind=c_bool),                          private :: at_pbc
 
   integer,          dimension(:),   allocatable, private :: at_type_ID
   double precision, dimension(:,:), allocatable, private :: at_coo_cart
@@ -91,6 +96,13 @@ contains
     integer :: iatom, itype, i
 
     if (isInit) return
+
+    ! periodic boundary conditions?
+    if (tinker_use_bounds) then
+       at_pbc = AENET_TRUE
+    else
+       at_pbc = AENET_FALSE
+    end if
 
     ! determine number and name of atom types
     ntypes = 0
@@ -189,20 +201,26 @@ contains
 
     tinker_ex = 0.0d0
 
-    ! updated lattice vectors
-    ! TODO: only do this in variable-cell simulations
-    latt_vec(1:3, 1) = [tinker_lvec(1,1), tinker_lvec(1,2), tinker_lvec(1,3)]
-    latt_vec(1:3, 2) = [tinker_lvec(2,1), tinker_lvec(2,2), tinker_lvec(2,3)]
-    latt_vec(1:3, 3) = [tinker_lvec(3,1), tinker_lvec(3,2), tinker_lvec(3,3)]
-
     ! updated coordinates array
     do i=1, tinker_n
        at_coo_cart(1:3, i) = [tinker_x(i), tinker_y(i), tinker_z(i)]
     end do
 
+    if (at_pbc) then
+       ! updated lattice vectors
+       ! TODO: only do this in variable-cell simulations
+       latt_vec(1:3,1) = [tinker_lvec(1,1), tinker_lvec(1,2), tinker_lvec(1,3)]
+       latt_vec(1:3,2) = [tinker_lvec(2,1), tinker_lvec(2,2), tinker_lvec(2,3)]
+       latt_vec(1:3,3) = [tinker_lvec(3,1), tinker_lvec(3,2), tinker_lvec(3,3)]
+    else
+       ! Determine bounding box of isolated system. Also shift all atoms
+       ! to the bounding box.
+       call bounding_box(at_coo_cart, latt_vec)
+    end if
+
     ! construct neighbor list
     call aenet_nbl_init(&
-         latt_vec, tinker_n, at_type_ID, at_coo_cart, AENET_TRUE, AENET_TRUE)
+         latt_vec, tinker_n, at_type_ID, at_coo_cart, AENET_TRUE, at_pbc)
 
     E = 0.0d0
 !$OMP PARALLEL default(shared) &
@@ -252,20 +270,26 @@ contains
     tinker_ex = 0.0d0
     tinker_dex = 0.0d0
 
-    ! updated lattice vectors
-    ! TODO: only do this in variable-cell simulations
-    latt_vec(1:3, 1) = [tinker_lvec(1,1), tinker_lvec(1,2), tinker_lvec(1,3)]
-    latt_vec(1:3, 2) = [tinker_lvec(2,1), tinker_lvec(2,2), tinker_lvec(2,3)]
-    latt_vec(1:3, 3) = [tinker_lvec(3,1), tinker_lvec(3,2), tinker_lvec(3,3)]
-
     ! updated coordinates array
     do i = 1, tinker_n
        at_coo_cart(1:3, i) = [tinker_x(i), tinker_y(i), tinker_z(i)]
     end do
 
+    if (at_pbc) then
+       ! updated lattice vectors
+       ! TODO: only do this in variable-cell simulations
+       latt_vec(1:3,1) = [tinker_lvec(1,1), tinker_lvec(1,2), tinker_lvec(1,3)]
+       latt_vec(1:3,2) = [tinker_lvec(2,1), tinker_lvec(2,2), tinker_lvec(2,3)]
+       latt_vec(1:3,3) = [tinker_lvec(3,1), tinker_lvec(3,2), tinker_lvec(3,3)]
+    else
+       ! Determine bounding box of isolated system. Also shift all atoms
+       ! to the bounding box.
+       call bounding_box(at_coo_cart, latt_vec)
+    end if
+
     ! construct neighbor list
     call aenet_nbl_init(&
-         latt_vec, tinker_n, at_type_ID, at_coo_cart, AENET_TRUE, AENET_TRUE)
+         latt_vec, tinker_n, at_type_ID, at_coo_cart, AENET_TRUE, at_pbc)
 
     E = 0.0d0
     at_for_cart(:,:) = 0.0d0
@@ -297,6 +321,10 @@ contains
 
     call aenet_nbl_final()
 
+! DEBUG
+!   write(*,*) '**** aenet **** Energy (eV) = ', E
+! END DEBUG
+
     tinker_ex = E*eV2kcal
     tinker_dex = -at_for_cart*eV2kcal
 
@@ -325,5 +353,58 @@ contains
     end do
 
   end function in
+
+  !--------------------------------------------------------------------!
+  !             bounding box for non-periodic simulations              !
+  !                                                                    !
+  ! This routine is essentially copied from aenet's geometry.f90       !
+  ! Will consider making it available through the aenet API in later   !
+  ! versions.                                                          !
+  !--------------------------------------------------------------------!
+
+  subroutine bounding_box(cooCart, box)
+
+    implicit none
+
+    double precision, dimension(:,:), intent(inout) :: cooCart
+    double precision, dimension(3,3), intent(out)   :: box
+
+    double precision, dimension(3) :: shift
+
+    double precision :: x_min, x_max
+    double precision :: y_min, y_max
+    double precision :: z_min, z_max
+
+    integer :: iat
+
+    ! To avoid numerical problems we make the bounding box
+    ! slightly larger than necessary and also consider this in
+    ! the shift of the coordinates. This should guarantee that all
+    ! scaled coordinates are in [0,1).
+    double precision, parameter :: EPS = 2.0d-6
+
+    x_min = minval(cooCart(1,:))
+    x_max = maxval(cooCart(1,:))
+    y_min = minval(cooCart(2,:))
+    y_max = maxval(cooCart(2,:))
+    z_min = minval(cooCart(3,:))
+    z_max = maxval(cooCart(3,:))
+
+    ! orthogonal bounding box
+    box(:,1) = (/ x_max - x_min + EPS, 0.0d0, 0.0d0  /)
+    box(:,2) = (/ 0.0d0, y_max - y_min + EPS, 0.0d0  /)
+    box(:,3) = (/ 0.0d0, 0.0d0, z_max - z_min + EPS  /)
+
+    ! origin of the bounding box
+    shift(1) = x_min - 0.5d0*EPS
+    shift(2) = y_min - 0.5d0*EPS
+    shift(3) = z_min - 0.5d0*EPS
+
+    ! shift coordinates to bounding box
+    do iat = 1, size(cooCart(1,:))
+       cooCart(1:3,iat) = cooCart(1:3,iat) - shift(1:3)
+    end do
+
+  end subroutine bounding_box
 
 end module aenettinker

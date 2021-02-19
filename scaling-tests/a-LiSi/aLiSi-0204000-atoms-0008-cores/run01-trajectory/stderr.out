@@ -1,0 +1,5 @@
+
+real	3m51.541s
+user	30m31.464s
+sys	0m0.476s
+mv: cannot stat ‘run01-trajectory/md.dyn’: No such file or directory

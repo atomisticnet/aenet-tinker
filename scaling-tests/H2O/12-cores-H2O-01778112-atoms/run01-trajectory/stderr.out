@@ -1,0 +1,6 @@
+./mdrun-NVT.sh: line 23: 432631 Segmentation fault      (core dumped) ${dynamic_x} -k ${name}.key $name $params $steps $timestep $writeout $MDtype $temperature > dynamic.out
+
+real	0m10.360s
+user	0m6.841s
+sys	0m5.059s
+mv: cannot stat ‘run01-trajectory/md.dyn’: No such file or directory

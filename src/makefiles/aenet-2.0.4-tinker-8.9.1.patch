@@ -1,4 +1,4 @@
---- Makefile.tinker-8.9.1	2021-06-13 17:54:06.316861725 -0400
+--- Makefile	2021-06-13 17:54:06.316861725 -0400
 +++ Makefile.aenetlib_gfortran.tinker-8.9.1	2021-06-13 17:51:25.723108596 -0400
 @@ -56,6 +56,24 @@
  APBS_LIBS = -lapbsmainroutines -lapbs -lmaloc -lapbsblas

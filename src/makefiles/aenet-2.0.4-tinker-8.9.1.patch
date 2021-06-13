@@ -1,5 +1,5 @@
---- Makefile	2021-06-13 17:54:06.316861725 -0400
-+++ Makefile.aenetlib_gfortran.tinker-8.9.1	2021-06-13 17:51:25.723108596 -0400
+--- Makefile	2021-06-13 18:38:42.562236547 -0400
++++ Makefile.aenetlib_gfortran.tinker-8.9.1	2021-06-13 18:38:30.369191353 -0400
 @@ -56,6 +56,24 @@
  APBS_LIBS = -lapbsmainroutines -lapbs -lmaloc -lapbsblas
  
@@ -109,7 +109,15 @@
  	align.o \
  	alterchg.o \
  	analysis.o \
-@@ -1785,8 +1808,8 @@
+@@ -1578,6 +1601,7 @@
+ action.o:
+ active.o: atoms.o inform.o iounit.o keys.o usage.o
+ alchemy.o: analyz.o atoms.o energi.o files.o inform.o iounit.o katoms.o mutant.o potent.o units.o usage.o
++aenettinker.o: atoms.o atomid.o bound.o boxes.o deriv.o energi.o neigh.o sizes.o units.o
+ align.o:
+ alterchg.o: angbnd.o atmlst.o atoms.o bndstr.o bound.o cflux.o charge.o chgpen.o inform.o iounit.o math.o mplpot.o mpole.o sizes.o
+ analysis.o: analyz.o atoms.o energi.o group.o inter.o iounit.o limits.o potent.o vdwpot.o
+@@ -1785,8 +1809,8 @@
  eurey3.o: action.o analyz.o atomid.o atoms.o bound.o energi.o group.o inform.o iounit.o urey.o urypot.o usage.o
  evcorr.o: atomid.o atoms.o bound.o boxes.o kdsp.o limits.o math.o mutant.o potent.o shunt.o vdw.o vdwpot.o
  ewald.o:

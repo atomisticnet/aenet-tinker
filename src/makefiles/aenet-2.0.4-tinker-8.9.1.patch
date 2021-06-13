@@ -1,5 +1,5 @@
---- Makefile	2021-06-13 18:38:42.562236547 -0400
-+++ Makefile.aenetlib_gfortran.tinker-8.9.1	2021-06-13 18:38:30.369191353 -0400
+--- Makefile	2021-06-13 19:06:28.184793062 -0400
++++ Makefile.aenetlib_gfortran.tinker-8.9.1	2021-06-13 19:06:12.575456461 -0400
 @@ -56,6 +56,24 @@
  APBS_LIBS = -lapbsmainroutines -lapbs -lmaloc -lapbsblas
  
@@ -46,7 +46,7 @@
 +OPTFLAGS = -Ofast -msse3 -fopenmp
 +OPTFLAGS = -Og -fbacktrace -fcheck=bounds -Wunused -Wmaybe-uninitialized
 +LIBDIR = -L. -L$(TINKER_LIBDIR)/linux -Wl,--no-as-needed -ldl
-+LIBS =
++LIBS = $(AENET_LIBS)
 +LIBFLAGS = -crusv
 +RANLIB = ranlib
 +LINKFLAGS = $(OPTFLAGS) -static-libgcc

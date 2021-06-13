@@ -90,7 +90,7 @@ OPTFLAGS = -Ofast -march=native -fopenmp
 OPTFLAGS = -Ofast -msse3 -fopenmp
 OPTFLAGS = -Og -fbacktrace -fcheck=bounds -Wunused -Wmaybe-uninitialized
 LIBDIR = -L. -L$(TINKER_LIBDIR)/linux -Wl,--no-as-needed -ldl
-LIBS =
+LIBS = $(AENET_LIBS)
 LIBFLAGS = -crusv
 RANLIB = ranlib
 LINKFLAGS = $(OPTFLAGS) -static-libgcc

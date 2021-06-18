@@ -1,0 +1,130 @@
+--- Makefile	2021-06-18 00:19:48.881788229 -0400
++++ Makefile.aenetlib_gfortran.tinker-8.9.1	2021-06-13 19:06:12.575456461 -0400
+@@ -56,6 +56,24 @@
+ APBS_LIBS = -lapbsmainroutines -lapbs -lmaloc -lapbsblas
+ 
+ ####################################################################
++##                           AENET                                ##
++####################################################################
++
++# use system default LAPACK and BLAS libraries
++NUMLIB = -llapack -lblas
++
++# use Intel MKL library
++# NUMLIB   = -Wl,--start-group \
++#            $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a \
++#            $(MKLROOT)/lib/intel64/libmkl_core.a \
++#            $(MKLROOT)/lib/intel64/libmkl_sequential.a \
++#            -Wl,--end-group -lpthread -lm -ldl
++
++AENETDIR = $(HOME)/code/aenet/aenet
++AENET_LIBS = $(AENETDIR)/src/libaenet.a $(NUMLIB)
++AENET_INC = $(AENETDIR)/src
++
++####################################################################
+ ##  Known Machine Types; Uncomment One of the Following Sections  ##
+ ##  May Need Editing to Match Your Desired OS & Compiler Version  ##
+ ####################################################################
+@@ -66,17 +84,17 @@
+ ##  Compiler:  GNU gfortran 9.3
+ ##  Parallel:  OpenMP
+ 
+-#F77 = gfortran
+-#F77FLAGS = -c
+-#OPTFLAGS = -Ofast -march=native -fopenmp
+-#OPTFLAGS = -Ofast -msse3 -fopenmp
+-#OPTFLAGS = -Og -fbacktrace -fcheck=bounds -Wunused -Wmaybe-uninitialized
+-#LIBDIR = -L. -L$(TINKER_LIBDIR)/linux -Wl,--no-as-needed -ldl
+-#LIBS = 
+-#LIBFLAGS = -crusv
+-#RANLIB = ranlib
+-#LINKFLAGS = $(OPTFLAGS) -static-libgcc
+-#RENAME = rename_bin
++F77 = gfortran
++F77FLAGS = -c
++OPTFLAGS = -Ofast -march=native -fopenmp
++OPTFLAGS = -Ofast -msse3 -fopenmp
++OPTFLAGS = -Og -fbacktrace -fcheck=bounds -Wunused -Wmaybe-uninitialized
++LIBDIR = -L. -L$(TINKER_LIBDIR)/linux -Wl,--no-as-needed -ldl
++LIBS = $(AENET_LIBS)
++LIBFLAGS = -crusv
++RANLIB = ranlib
++LINKFLAGS = $(OPTFLAGS) -static-libgcc
++RENAME = rename_bin
+ 
+ ##  Build:     Tinker
+ ##  OS Type:   Apple macOS
+@@ -84,17 +102,17 @@
+ ##  Compiler:  GNU gfortran 8.1
+ ##  Parallel:  OpenMP
+ 
+-F77 = gfortran
+-F77FLAGS = -c
+-#OPTFLAGS = -Ofast -march=native -fopenmp
+-OPTFLAGS = -Ofast -mssse3 -fopenmp
+-#OPTFLAGS = -Og -fbacktrace -fcheck=bounds -Wunused -Wmaybe-uninitialized
+-LIBDIR = -L. -L$(TINKER_LIBDIR)/macos
+-LIBS = 
+-LIBFLAGS = -crusv
+-RANLIB = ranlib -c
+-LINKFLAGS = $(OPTFLAGS) -static-libgcc
+-RENAME = rename_bin
++#F77 = gfortran
++#F77FLAGS = -c
++##OPTFLAGS = -Ofast -march=native -fopenmp
++#OPTFLAGS = -Ofast -mssse3 -fopenmp
++##OPTFLAGS = -Og -fbacktrace -fcheck=bounds -Wunused -Wmaybe-uninitialized
++#LIBDIR = -L. -L$(TINKER_LIBDIR)/macos
++#LIBS =
++#LIBFLAGS = -crusv
++#RANLIB = ranlib -c
++#LINKFLAGS = $(OPTFLAGS) -static-libgcc
++#RENAME = rename_bin
+ 
+ ##  Build:     Tinker
+ ##  OS Type:   Microsoft Windows 10
+@@ -151,6 +169,7 @@
+ 
+ OBJS =	action.o \
+ 	active.o \
++	aenettinker.o \
+ 	alchemy.o \
+ 	align.o \
+ 	alterchg.o \
+@@ -787,6 +806,9 @@
+ %.o: %.f
+ 	${F77} ${F77FLAGS} ${OPTFLAGS} $< -o $@ 
+ 
++%.o: %.f90
++	${F77} ${F77FLAGS} ${OPTFLAGS} $< -o $@
++
+ %.x: %.o libtinker.a
+ 	${F77} ${LINKFLAGS} -o $@ ${LIBDIR} ${FFTW_LIBDIR} $^ ${LIBS} ${FFTW_LIBS}; strip $@
+ 
+@@ -1064,6 +1086,7 @@
+ 	ar ${LIBFLAGS} libtinker.a \
+ 	action.o \
+ 	active.o \
++	aenettinker.o \
+ 	align.o \
+ 	alterchg.o \
+ 	analysis.o \
+@@ -1578,6 +1601,7 @@
+ action.o:
+ active.o: atoms.o inform.o iounit.o keys.o usage.o
+ alchemy.o: analyz.o atoms.o energi.o files.o inform.o iounit.o katoms.o mutant.o potent.o units.o usage.o
++aenettinker.o: atoms.o atomid.o bound.o boxes.o deriv.o energi.o neigh.o sizes.o units.o
+ align.o:
+ alterchg.o: angbnd.o atmlst.o atoms.o bndstr.o bound.o cflux.o charge.o chgpen.o inform.o iounit.o math.o mplpot.o mpole.o sizes.o
+ analysis.o: analyz.o atoms.o energi.o group.o inter.o iounit.o limits.o potent.o vdwpot.o
+@@ -1785,8 +1809,8 @@
+ eurey3.o: action.o analyz.o atomid.o atoms.o bound.o energi.o group.o inform.o iounit.o urey.o urypot.o usage.o
+ evcorr.o: atomid.o atoms.o bound.o boxes.o kdsp.o limits.o math.o mutant.o potent.o shunt.o vdw.o vdwpot.o
+ ewald.o:
+-extra.o: energi.o
+-extra1.o: atoms.o deriv.o energi.o
++extra.o: aenettinker.o energi.o
++extra1.o: aenettinker.o atoms.o deriv.o energi.o
+ extra2.o: atoms.o hessn.o
+ extra3.o: action.o analyz.o atoms.o energi.o
+ faces.o:

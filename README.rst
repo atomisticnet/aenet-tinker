@@ -4,7 +4,7 @@
 
 If you make use of the aenet-Tinker interface, please cite the following reference:
 
-M.S. Chen, T. Morawietz, T.E. Markland, N. Artrith, AENET-LAMMPS and AENET-TINKER: Interfaces for Accurate and Efficient Molecular Dynamics Simulations with Machine Learning Potentials, J. Chem. Phys. 155, 074801 (2021). doi: https://doi.org/10.1063/5.0063880
+M.S. Chen, T. Morawietz, H. Mori, T.E. Markland, N. Artrith, AENET-LAMMPS and AENET-TINKER: Interfaces for Accurate and Efficient Molecular Dynamics Simulations with Machine Learning Potentials, J. Chem. Phys. 155, 074801 (2021). doi: https://doi.org/10.1063/5.0063880
 
 Preprint (Preprint where the data is discussed)
 arXiv (2021) doi: https://arxiv.org/abs/2107.11311
